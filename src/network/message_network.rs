@@ -26,7 +26,6 @@ use network::address::Address;
 use network::constants::{self, ServiceFlags};
 use consensus::{Encodable, Decodable, ReadExt};
 use consensus::encode;
-use network::message::CommandString;
 use hashes::sha256d;
 
 /// Some simple messages
@@ -133,7 +132,7 @@ impl Decodable for RejectReason {
 #[derive(PartialEq, Eq, Clone, Debug)]
 pub struct Reject {
     /// message type rejected
-    pub message: CommandString,
+    pub message: Cow<'static, str>,
     /// reason of rejection as code
     pub ccode: RejectReason,
     /// reason of rejectection
@@ -153,7 +152,6 @@ mod tests {
     use hashes::hex::FromHex;
     use hashes::sha256d::Hash;
     use network::constants::ServiceFlags;
-    use network::message_network::CommandString;
 
     use consensus::encode::{deserialize, serialize};
 
@@ -189,7 +187,7 @@ mod tests {
         assert!(decode_result_nonfinal.is_ok());
 
         let conflict = decode_result_conflict.unwrap();
-        assert_eq!(CommandString::try_from("tx").unwrap(), conflict.message);
+        assert_eq!("tx", conflict.message);
         assert_eq!(RejectReason::Duplicate, conflict.ccode);
         assert_eq!("txn-mempool-conflict", conflict.reason);
         assert_eq!(
@@ -198,7 +196,7 @@ mod tests {
         );
 
         let nonfinal = decode_result_nonfinal.unwrap();
-        assert_eq!(CommandString::try_from("tx").unwrap(), nonfinal.message);
+        assert_eq!("tx", nonfinal.message);
         assert_eq!(RejectReason::NonStandard, nonfinal.ccode);
         assert_eq!("non-final", nonfinal.reason);
         assert_eq!(
